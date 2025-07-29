@@ -26,16 +26,23 @@ func main() {
 		},
 	})
 
-	socketServer.Use(func(client *socket.Client, message socket.Message) bool {
-		log.Printf("use for test")
-	}).On("test", func(client *socket.Client, data any) {
+	socketServer.On("test", func(client *socket.Client, data any) {
+		type TestData struct {
+			Message string `json:"message"`
+		}
 		log.Printf("Received test event from client %s: %v", client.ID, data)
+		client.BroadcastToRoom("a", "test_response", map[string]interface{}{
+			"message": "Test event received successfully!",
+			"data": &TestData{
+				Message: "Hello from the server!",
+			},
+		})
 	})
 
-	//socketServer.Use(func(client *socket.Client, msg socket.Message) bool {
-	//	log.Printf("Client %s sent event: %s", client.ID, msg.Event)
-	//	return true // Return false to block the message
-	//})
+	socketServer.Use(func(client *socket.Client, msg socket.Message) bool {
+		log.Printf("Client %s sent event: %s", client.ID, msg.Event)
+		return true // Return false to block the message
+	})
 
 	type JoinRoomData struct {
 		Room string `json:"room"`
