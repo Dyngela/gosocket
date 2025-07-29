@@ -114,16 +114,23 @@ func (c *Client) Leave(room string) {
 	c.server.leaveRoom(c, room)
 }
 
-func (c *Client) Broadcast(room string, event string, data interface{}) {
+func (c *Client) BroadcastToRoom(room string, event string, data interface{}) {
 	c.server.mu.RLock()
 	defer c.server.mu.RUnlock()
-	log.Printf("Broadcasting event '%s' to room '%s'", event, room)
-
 	if clients, ok := c.server.rooms[room]; ok {
 		for _, client := range clients {
 			if client.ID != c.ID {
 				client.Emit(event, data)
 			}
 		}
+	}
+}
+
+func (c *Client) Broadcast(event string, data interface{}) {
+	c.server.mu.RLock()
+	defer c.server.mu.RUnlock()
+	c.server.broadcast <- Message{
+		Event: event,
+		Data:  data,
 	}
 }

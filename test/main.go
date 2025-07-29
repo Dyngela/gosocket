@@ -32,7 +32,7 @@ func main() {
 			Message string `json:"message"`
 		}
 		log.Printf("Received test event from client %s: %v", client.ID, data)
-		client.Broadcast("a", "test_response", map[string]interface{}{
+		client.BroadcastToRoom("a", "test_response", map[string]interface{}{
 			"message": "Test event received successfully!",
 			"data": &TestData{
 				Message: "Hello from the server!",
