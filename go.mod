@@ -1,4 +1,4 @@
-module gosocket
+module github.com/Dyngela/gosocket
 
 go 1.24
 
