@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 	"sync"
 )
@@ -100,8 +99,6 @@ func (s *Server) Use(middleware func(*Client, Message) bool) {
 // OnTyped registers a typed event handler
 // T is the type of the data expected in the event
 func OnTyped[T any](s *Server, event string, handler func(*Client, T)) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.handlers[event] = &TypedHandler[T]{handler: handler}
 }
 
@@ -123,7 +120,7 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Failed to upgrade connection: %v", err)
+		panic("Failed to upgrade connection: " + err.Error())
 		return
 	}
 
@@ -158,9 +155,6 @@ func (s *Server) run() {
 			s.mu.Lock()
 			s.clients[client.ID] = client
 			s.mu.Unlock()
-			log.Printf("Client %s connected", client.ID)
-
-			// Trigger connect event
 			if handler, exists := s.handlers["connect"]; exists {
 				handler.Handle(client, []byte{})
 			}
@@ -177,9 +171,6 @@ func (s *Server) run() {
 				}
 			}
 			s.mu.Unlock()
-			log.Printf("Client %s disconnected", client.ID)
-
-			// Trigger disconnect event
 			if handler, exists := s.handlers["disconnect"]; exists {
 				handler.Handle(client, []byte{})
 			}

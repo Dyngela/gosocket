@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 
+	"github.com/Dyngela/gosocket"
 	"github.com/gorilla/mux"
-	socket "gosocket"
 )
 
 type TEST struct {
@@ -15,16 +14,7 @@ type TEST struct {
 
 func main() {
 	// Create a new socket server
-	socketServer := socket.NewServer(&socket.ServerConfig{
-		AuthMiddleware: func(w http.ResponseWriter, r *http.Request) bool {
-			return true
-		},
-		Upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
-	})
+	socketServer := socket.NewServer(nil)
 
 	socketServer.On("test", func(client *socket.Client, data any) {
 		type TestData struct {
