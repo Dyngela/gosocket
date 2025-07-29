@@ -99,6 +99,8 @@ func (s *Server) Use(middleware func(*Client, Message) bool) {
 // OnTyped registers a typed event handler
 // T is the type of the data expected in the event
 func OnTyped[T any](s *Server, event string, handler func(*Client, T)) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.handlers[event] = &TypedHandler[T]{handler: handler}
 }
 
