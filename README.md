@@ -42,5 +42,33 @@ You can add middleware to the server on every request:
 	})
 ```
 
+Finally you can register event handlers in two ways:
 
+First using On which take event name and an any in data
+```go
+    socketServer.On("eventName", func(client *socket.Client, data any) {
+        log.Printf("Received message from %s: %s", client.ID, msg.Data)
+        client.Emit("joined", map[string]interface{}{
+            "message": "You have joined the room!",
+            "room":    data.Room,
+        })
+    })
+```
 
+Or you can use a typed handler for type safety and better code completion.
+```go
+    import "github.com/Dyngela/gosocket"
+
+    type JoinRoomData struct {
+		Room string `json:"room"`
+	}
+
+	socket.OnTyped[JoinRoomData](socketServer, "join", func(client *socket.Client, data JoinRoomData) {
+		log.Printf("Client %s joining room: %s", client.ID, data.Room)
+		client.Join(data.Room)
+		client.Emit("joined", CustomResponse{
+			Message: "You have joined the room!",
+            Room:    data.Room,
+        })
+	})
+```
