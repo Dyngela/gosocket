@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 
@@ -18,27 +19,23 @@ func main() {
 		AuthMiddleware: func(w http.ResponseWriter, r *http.Request) bool {
 			return true
 		},
-	})
-
-	// Add middleware for authentication or logging
-	socketServer.Use(func(client *socket.Client, msg socket.Message) bool {
-		log.Printf("Client %s sent event: %s", client.ID, msg.Event)
-		log.Println(msg)
-		return true // Return false to block the message
-	})
-
-	socketServer.On("test", func(client *socket.Client, data any) {
-		type TestData struct {
-			Message string `json:"message"`
-		}
-		log.Printf("Received test event from client %s: %v", client.ID, data)
-		client.BroadcastToRoom("a", "test_response", map[string]interface{}{
-			"message": "Test event received successfully!",
-			"data": &TestData{
-				Message: "Hello from the server!",
+		Upgrader: websocket.Upgrader{
+			CheckOrigin: func(r *http.Request) bool {
+				return true
 			},
-		})
+		},
 	})
+
+	socketServer.Use(func(client *socket.Client, message socket.Message) bool {
+		log.Printf("use for test")
+	}).On("test", func(client *socket.Client, data any) {
+		log.Printf("Received test event from client %s: %v", client.ID, data)
+	})
+
+	//socketServer.Use(func(client *socket.Client, msg socket.Message) bool {
+	//	log.Printf("Client %s sent event: %s", client.ID, msg.Event)
+	//	return true // Return false to block the message
+	//})
 
 	type JoinRoomData struct {
 		Room string `json:"room"`

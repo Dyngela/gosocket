@@ -43,7 +43,6 @@ func (c *Client) writePump() {
 				return
 			}
 
-			// Create the response structure
 			response := map[string]interface{}{
 				"event": message.Event,
 				"data":  message.Data,
