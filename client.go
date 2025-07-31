@@ -5,6 +5,7 @@ import (
 	"log"
 	"errors"
 	"sync"
+	"time"
 )
 
 // Client represents a connected websocket client
