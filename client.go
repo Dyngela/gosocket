@@ -3,6 +3,7 @@ package socket
 import (
 	"github.com/gorilla/websocket"
 	"log"
+	"errors"
 	"sync"
 )
 
@@ -34,7 +35,6 @@ func (c *Client) Emit(event string, data interface{}) {
 
 func (c *Client) writePump() {
 	defer c.conn.Close()
-
 	for {
 		select {
 		case message, ok := <-c.send:
@@ -54,6 +54,7 @@ func (c *Client) writePump() {
 			}
 		}
 	}
+
 }
 
 func (c *Client) readPump() {
@@ -62,14 +63,25 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 
+	reconnectAttempt := 0
 	for {
 		var msg Message
 		err := c.conn.ReadJSON(&msg)
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket error: %v", err)
+			var closeErr *websocket.CloseError
+			if errors.As(err, &closeErr) {
+				if closeErr.Code == 1001 || closeErr.Code == 1006 {
+					if reconnectAttempt > 15 {
+						c.server.unregister <- c
+						break
+					}
+					reconnectAttempt++
+					time.Sleep(5 * time.Second)
+					continue
+				}
 			}
-			break
+			log.Printf("WebSocket read error: %v", err)
+			continue
 		}
 
 		// Apply middleware
